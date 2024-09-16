@@ -1,23 +1,24 @@
 const DeranaNews = require('@mrhansamala/derana-news-scraper');
-const { sendMessage } = require('./bot'); // Adjust this according to how you send messages in your bot
+const { cmd } = require('../command');
 
-// WhatsApp group ID (adjust this with your actual group ID)
-const GROUP_ID = 'https://chat.whatsapp.com/IE79e3b2KsG6dgz6bBGFSJ';
+// WhatsApp group ID (from your group link)
+const GROUP_ID = 'IE79e3b2KsG6dgz6bBGFSJ';
 
-// Variable to keep track of the latest news sent
+// Variable to track the latest news
 let lastNewsTitle = '';
 
-async function fetchAndSendNews() {
+async function fetchAndSendNews(conn) {
     try {
-        // Fetch the latest news from AdaDerana
+        // Fetch news from AdaDerana
         const news = await DeranaNews.getNews();
 
-        if (news.length > 0) {
-            const latestNews = news[0]; // Get the most recent news item
+        if (news && news.length > 0) {
+            const latestNews = news[0];
 
-            // Check if the latest news is new
+            // Check if the news is new
             if (latestNews.title !== lastNewsTitle) {
-                // Construct the message
+                lastNewsTitle = latestNews.title; // Update the last news title
+
                 const newsMessage = `
 📰 *Latest News from AdaDerana* 📰
 
@@ -29,22 +30,11 @@ Published at: ${latestNews.pubDate || 'Unknown'}
 ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴄʜᴀʀᴜᴋᴀ ᴍᴀʜᴇꜱʜ
                 `;
 
-                // Prepare the thumbnail image (if available)
-                const thumbnailUrl = latestNews.thumbnail || null; // Assume 'thumbnail' field holds the image URL
-
-                // Send the news with the thumbnail (if available)
-                if (thumbnailUrl) {
-                    await conn.sendMessage(GROUP_ID, {
-                        image: { url: thumbnailUrl },
-                        caption: newsMessage
-                    });
-                } else {
-                    // Send only text if no thumbnail is available
-                    await sendMessage(GROUP_ID, { text: newsMessage });
-                }
-
-                // Update the lastNewsTitle to avoid duplicates
-                lastNewsTitle = latestNews.title;
+                // Send the news message with the thumbnail
+                await conn.sendMessage(GROUP_ID, {
+                    image: { url: latestNews.thumbnail }, // Send thumbnail if available
+                    caption: newsMessage
+                });
             }
         }
     } catch (error) {
@@ -52,8 +42,18 @@ Published at: ${latestNews.pubDate || 'Unknown'}
     }
 }
 
-// Function to run the news checker every 30 minutes (1800000 ms)
-setInterval(fetchAndSendNews, 1800000); // Adjust the interval as needed
+// Set an interval to fetch and send news every 30 minutes (1800000 ms)
+setInterval(() => {
+    fetchAndSendNews(conn);
+}, 1800000); // 30 minutes interval
 
-// Initial call to start immediately when the bot starts
-fetchAndSendNews();
+// Command to manually fetch news
+cmd({
+    pattern: 'news',
+    desc: 'Fetch the latest news manually',
+    category: 'information',
+    filename: __filename
+},
+async(conn, mek) => {
+    await fetchAndSendNews(conn);
+});
