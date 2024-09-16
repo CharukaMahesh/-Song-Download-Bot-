@@ -2,7 +2,7 @@ const DeranaNews = require('@mrhansamala/derana-news-scraper');
 const { sendMessage } = require('./bot'); // Adjust this according to how you send messages in your bot
 
 // WhatsApp group ID (adjust this with your actual group ID)
-const GROUP_ID = 'YOUR_WHATSAPP_GROUP_ID';
+const GROUP_ID = 'https://chat.whatsapp.com/IE79e3b2KsG6dgz6bBGFSJ';
 
 // Variable to keep track of the latest news sent
 let lastNewsTitle = '';
